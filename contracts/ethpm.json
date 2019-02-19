@@ -1,0 +1,15 @@
+{
+  "package_name": "proof-of-poll",
+  "version": "0.0.1",
+  "description": "Proof Of Poll contracts",
+  "authors": [
+    "Loredana Cirstea <loredana.cirstea@gmail.com>"
+  ],
+  "keywords": [
+    "ethereum",
+    "poll"
+  ],
+  "dependencies": {
+  },
+  "license": "MIT"
+}
