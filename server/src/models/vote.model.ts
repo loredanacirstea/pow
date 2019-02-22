@@ -11,15 +11,14 @@ export class Vote extends Entity {
 
   @property({
     type: 'string',
-    required: true,
   })
   iphash: string;
 
   @property({
-    type: 'string',
+    type: 'number',
     required: true,
   })
-  resourceid: string;
+  resourceid: number;
 
   @property({
     type: 'number',
@@ -29,13 +28,13 @@ export class Vote extends Entity {
 
   @property({
     type: 'number',
-    required: true,
   })
   paymentIdentifier: number;
 
   @property({
     type: 'date',
-    required: true,
+    generated: true,
+    default: new Date(),
   })
   timestamp: string;
 
