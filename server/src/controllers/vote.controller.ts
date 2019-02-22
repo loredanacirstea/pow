@@ -33,7 +33,7 @@ export class VoteController {
       },
     },
   })
-  async create(@requestBody() vote: Vote): Promise<Vote> {
+  async create(@requestBody() vote: Partial<Vote>): Promise<Vote> {
     return await this.voteRepository.create(vote);
   }
 

@@ -1,3 +1,4 @@
+import {inject} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -15,14 +16,20 @@ import {
   put,
   del,
   requestBody,
+  Request,
+  RestBindings,
+  HttpErrors,
 } from '@loopback/rest';
+import {sha3_256} from 'js-sha3';
 import {Resource} from '../models';
 import {ResourceRepository} from '../repositories';
+import {VoteController} from './vote.controller';
 
 export class ResourceController {
   constructor(
     @repository(ResourceRepository)
     public resourceRepository : ResourceRepository,
+    @inject(RestBindings.Http.REQUEST) public request: Request,
   ) {}
 
   @post('/resource', {
@@ -134,4 +141,78 @@ export class ResourceController {
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.resourceRepository.deleteById(id);
   }
+
+  @get('/resource/{id}/count/vote', {
+    responses: {
+      '200': {
+        description: 'Resource votes per voter count',
+        content: {'application/json': {schema: CountSchema}},
+      },
+    },
+  })
+  async countVotesPerIp(
+    @param.path.string('id') id: string,
+  ): Promise<Count> {
+    let countVotesPerIp;
+
+    let voteRepository = await this.resourceRepository.voteRepository;
+    let voteController = new VoteController(voteRepository);
+
+    const iphash = this.getClientHashIp(this.request);
+    return await voteController.count({
+        resourceid: id,
+        iphash,
+    });
+  }
+
+  @get('/resource/{id}/vote/{optionid}', {
+    responses: {
+      '200': {
+        description: 'Vote count per voter IP hash',
+        content: {'application/json': {schema: {'x-ts-type': CountSchema}}},
+      },
+    },
+  })
+  async vote(
+    @param.path.string('id') id: string,
+    @param.path.number('optionid') optionid: number,
+  ): Promise<Count> {
+    let resource, countVotesPerIp;
+
+    let voteRepository = await this.resourceRepository.voteRepository;
+    let voteController = new VoteController(voteRepository);
+
+    const iphash = this.getClientHashIp(this.request);
+    countVotesPerIp = await this.countVotesPerIp(id);
+
+    resource = await this.resourceRepository.findById(id);
+    if (!resource) {
+        throw new HttpErrors.NotFound('Resource not found, cannot vote');
+    }
+
+    if (countVotesPerIp.count >= resource.votesPerPerson) {
+        throw new HttpErrors.Forbidden('Voter has reached the number of allowed votes');
+    }
+
+    // TODO raiden payment (don't wait for success)
+
+    let vote = await voteController.create({
+        iphash,
+        resourceid: id,
+        optionid,
+    });
+    if (vote) {
+        resource.options[optionid].votes ++;
+        countVotesPerIp.count ++;
+        this.resourceRepository.updateById(id, {options: resource.options});
+    }
+
+    return {count: resource.votesPerPerson - countVotesPerIp.count};
+  }
+
+    getClientHashIp(req: Request): string {
+        const clientIp = req.header('x-forwarded-for') || req.ip;
+        const iphash = sha3_256(clientIp);
+        return iphash;
+    }
 }

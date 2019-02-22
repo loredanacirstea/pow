@@ -39,6 +39,7 @@ export class Option extends Model {
 
     @property({
       type: 'number',
+      generated: true,
       default: 0,
     })
     votes: number;
@@ -47,7 +48,7 @@ export class Option extends Model {
 @model()
 export class Resource extends Entity {
   @property({
-    type: 'number',
+    type: 'string',
     id: true,
     generated: true,
   })

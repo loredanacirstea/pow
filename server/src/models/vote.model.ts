@@ -15,10 +15,10 @@ export class Vote extends Entity {
   iphash: string;
 
   @property({
-    type: 'number',
+    type: 'string',
     required: true,
   })
-  resourceid: number;
+  resourceid: string;
 
   @property({
     type: 'number',
