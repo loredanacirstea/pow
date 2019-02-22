@@ -16,4 +16,14 @@ export default class ResourceServer {
         const url = `${this.baseUrl}/resource/${id}`;
         return this.httpClient.get(url);
     }
+
+    getOwnVotes(resourceid) {
+        const url = `${this.baseUrl}/resource/${resourceid}/count/vote`;
+        return this.httpClient.get(url);
+    }
+
+    vote(resourceid, optionid) {
+        const url = `${this.baseUrl}/resource/${resourceid}/vote/${optionid}`;
+        return this.httpClient.get(url);
+    }
 }

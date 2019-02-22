@@ -18,7 +18,7 @@
                               icon
                               @click.stop="mini = true"
                             >
-                              <v-icon>fa-play</v-icon>
+                              <v-icon>fa-{{item.icon}}</v-icon>
                             </v-btn>
                         </router-link>
                     </v-list-tile-action>
