@@ -1,11 +1,44 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, Model, model, property} from '@loopback/repository';
+
+@model()
+export class Option extends Model {
+    @property({
+      type: 'string',
+      required: true,
+    })
+    name: string;
+
+    @property({
+      type: 'string',
+      required: true,
+    })
+    token: string;
+
+    @property({
+      type: 'string',
+      required: true,
+    })
+    taget: string;
+
+    @property({
+      type: 'number',
+      required: true,
+    })
+    channelid: number;
+
+    @property({
+      type: 'number',
+      required: true,
+    })
+    amount: number;
+}
 
 @model()
 export class Resource extends Entity {
   @property({
-    type: 'string',
+    type: 'number',
     id: true,
-    required: true,
+    generated: true,
   })
   _id: string;
 
@@ -32,7 +65,7 @@ export class Resource extends Entity {
     itemType: 'object',
     required: true,
   })
-  options: object[];
+  options: Option[];
 
 
   constructor(data?: Partial<Resource>) {
