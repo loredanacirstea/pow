@@ -41,6 +41,9 @@ export class ResourceController {
     },
   })
   async create(@requestBody() resource: Resource): Promise<Resource> {
+    resource.timestamp = new Date().getTime();
+    resource.startDate = resource.startDate || new Date().getTime();
+    resource.endDate = resource.endDate || new Date().getTime();
     return await this.resourceRepository.create(resource);
   }
 
@@ -194,12 +197,12 @@ export class ResourceController {
         throw new HttpErrors.Forbidden('Voter has reached the number of allowed votes');
     }
 
-    if (new Date(resource.startDate) > new Date()) {
+    if (resource.startDate > new Date().getTime()) {
         throw new HttpErrors.Forbidden(`Voting is permitted only after ${resource.startDate}`);
     }
 
-    if (new Date(resource.endDate) < new Date()) {
-        throw new HttpErrors.Forbidden(`Voting has ended at ${resource.endDate}`);
+    if (resource.endDate < new Date().getTime()) {
+        throw new HttpErrors.Forbidden(`Voting has ended at ${new Date(resource.endDate)}`);
     }
 
     // TODO raiden payment (don't wait for success)

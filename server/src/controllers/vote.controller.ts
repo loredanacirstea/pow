@@ -34,6 +34,7 @@ export class VoteController {
     },
   })
   async create(@requestBody() vote: Partial<Vote>): Promise<Vote> {
+    vote.timestamp = new Date().getTime();
     return await this.voteRepository.create(vote);
   }
 

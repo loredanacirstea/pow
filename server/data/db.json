@@ -1,11 +1,14 @@
 {
   "ids": {
     "Resource": 3,
+    "Vote": 1
   },
   "models": {
     "Resource": {
-      "1": "{\"name\":\"Proof Of Wonder\",\"icon\":\"star\",\"votesPerPerson\":100,\"startDate\":\"2019-02-21T22:32:42.926Z\",\"endDate\":\"2019-03-21T22:32:42.926Z\",\"options\":[{\"token\":\"0x0\",\"target\":\"0x0\",\"name\":\"clap!\",\"icon\":\"clap\",\"channelid\":1,\"amount\":1}],\"_id\":1}",
-      "2": "{\"name\":\"Proof Of Microscope\",\"icon\":\"microscope\",\"votesPerPerson\":100,\"startDate\":\"2019-02-21T22:32:42.926Z\",\"endDate\":\"2019-03-21T22:32:42.926Z\",\"options\":[{\"token\":\"0x01\",\"target\":\"0x01\",\"name\":\"human liver\",\"channelid\":1,\"amount\":1},{\"token\":\"0x02\",\"target\":\"0x02\",\"name\":\"mouse gut\",\"channelid\":1,\"amount\":1},{\"token\":\"0x03\",\"target\":\"0x03\",\"name\":\"human cerebelum\",\"channelid\":1,\"amount\":1},{\"token\":\"0x04\",\"target\":\"0x04\",\"name\":\"human brain\",\"channelid\":1,\"amount\":1},{\"token\":\"0x05\",\"target\":\"0x05\",\"name\":\"human spinal chord\",\"channelid\":1,\"amount\":1},{\"token\":\"0x06\",\"target\":\"0x06\",\"name\":\"mosquito wing\",\"channelid\":1,\"amount\":1}],\"_id\":2}"
+      "1": "{\"name\":\"Proof Of Wonder\",\"icon\":\"heart\",\"votesPerPerson\":100,\"startDate\":1550788362926,\"endDate\":1551047562926,\"options\":[{\"token\":\"0x0\",\"target\":\"0x0\",\"name\":\"clap!\",\"icon\":\"clap\",\"channelid\":1,\"amount\":1,\"votes\":0}],\"_id\":1}",
+      "2": "{\"name\":\"Proof Of Microscope\",\"icon\":\"microscope\",\"votesPerPerson\":100,\"startDate\":1550788362926,\"endDate\":1551047562926,\"options\":[{\"token\":\"0x01\",\"target\":\"0x01\",\"name\":\"human liver\",\"channelid\":1,\"amount\":1,\"votes\":0},{\"token\":\"0x02\",\"target\":\"0x02\",\"name\":\"mouse gut\",\"channelid\":1,\"amount\":1,\"votes\":0},{\"token\":\"0x03\",\"target\":\"0x03\",\"name\":\"human cerebelum\",\"channelid\":1,\"amount\":1,\"votes\":0},{\"token\":\"0x04\",\"target\":\"0x04\",\"name\":\"human brain\",\"channelid\":1,\"amount\":1,\"votes\":0},{\"token\":\"0x05\",\"target\":\"0x05\",\"name\":\"human spinal chord\",\"channelid\":1,\"amount\":1,\"votes\":0},{\"token\":\"0x06\",\"target\":\"0x06\",\"name\":\"mosquito wing\",\"channelid\":1,\"amount\":1,\"votes\":0}],\"_id\":2}"
+    },
+    "Vote": {
     }
   }
 }

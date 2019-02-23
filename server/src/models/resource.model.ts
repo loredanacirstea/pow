@@ -74,16 +74,18 @@ export class Resource extends Entity {
   votesPerPerson: number;
 
   @property({
-    type: 'date',
+    type: 'number',
     required: true,
+    default: new Date().getTime(),
   })
-  startDate: string;
+  startDate: number;
 
   @property({
-    type: 'date',
-    required: true,
+      type: 'number',
+      required: true,
+      default: new Date().getTime(),
   })
-  endDate: string;
+  endDate: number;
 
   @property({
     type: 'array',
@@ -98,11 +100,11 @@ export class Resource extends Entity {
   winnerOptionid: number;
 
   @property({
-    type: 'date',
+    type: 'number',
     generated: true,
-    default: new Date(),
+    default: new Date().getTime(),
   })
-  timestamp: string;
+  timestamp: number;
 
   constructor(data?: Partial<Resource>) {
     super(data);

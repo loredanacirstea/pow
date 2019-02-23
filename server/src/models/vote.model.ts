@@ -32,11 +32,11 @@ export class Vote extends Entity {
   paymentIdentifier: number;
 
   @property({
-    type: 'date',
+    type: 'number',
     generated: true,
-    default: new Date(),
+    default: new Date().getTime(),
   })
-  timestamp: string;
+  timestamp: number;
 
 
   constructor(data?: Partial<Vote>) {
