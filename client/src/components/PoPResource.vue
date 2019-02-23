@@ -7,19 +7,29 @@
         </v-layout>
         <div class="stats">
             <v-flex xs10 wrap>
-                <p>Total Votes: {{totalVotes}}</p>
+                <p>total votes: {{totalVotes}}</p>
             </v-flex>
             <v-flex xs10 wrap>
-                <p>Votes remaining: {{remainingVotes}}</p>
+                <p>votes remaining: {{remainingVotes}}</p>
+            </v-flex>
+            <v-flex xs10 wrap>
+                <p>started: {{new Date(resource.startDate).toString().split(' GMT')[0]}}</p>
+            </v-flex>
+            <v-flex xs10 wrap>
+                <p>ends: {{new Date(resource.endDate).toString().split(' GMT')[0]}}</p>
             </v-flex>
         </div>
         <div class="resopts">
-            <div v-for="(option, index) in resource.options" class="resopt">
-                <v-layout row wrap>
-                    <v-flex xs3 offset-xs3>
-                        <div class="subheading">{{option.name}}</div>
+            <div
+                v-if="graphValues.length > 0"
+                v-for="(option, index) in resource.options" class="resopt"
+            >
+                <v-layout row wrap align-center>
+                    <v-flex xs6 class="text-xs-right">
+                        <span class="subheading font-weight-bold" :style="{color: `rgba(${option.color.join(',')}, 1)`}">{{option.name}}</span>
                     </v-flex>
                     <v-flex xs3>
+                        <span class="subheading font-weight-bold">{{option.votes}}</span>
                         <v-avatar
                             v-if="option.icon"
                             class="v-btn v-btn--depressed theme--light v-btn--floating"
@@ -32,12 +42,40 @@
                             v-else
                             v-on:click.stop="vote(index)"
                             round depressed
+                            :disabled="!votingIsOngoing"
                         >
                           vote
                         </v-btn>
                     </v-flex>
                 </v-layout>
             </div>
+        </div>
+        </br></br></br></br></br></br></br></br>
+        <div class="graph" v-for="(option, index) in resource.options">
+            <v-flex xs12 wrap>
+                <v-sparkline
+                    v-if="graphValues[index] && graphValues[index].length"
+                    :value="graphValues[index]"
+                    height="50"
+                    :color="`rgba(${option.color.join(',')}, 0.3)`"
+                    smooth="10"
+                    padding="8"
+                    line-width="1"
+                    stroke-linecap="round"
+                    gradient-direction="top"
+                    auto-draw
+                ></v-sparkline>
+            </v-flex>
+        </div>
+        <div  class="errorAlert">
+            <v-alert
+              v-model="errorAlert"
+              dismissible
+              type="warning"
+              outline
+            >
+              {{errorMessage}}
+            </v-alert>
         </div>
     </v-container>
 </template>
@@ -56,16 +94,20 @@ export default {
             remainingVotes: 0,
             votesPollIntervalId: null,
             resourcePollIntervalId: null,
+            startTimestamp: null,
+            votingIsOngoing: false,
+            graphValues: [],
+            errorAlert: false,
+            errorMessage: null,
+            timeUnit: 0,
         };
     },
     mounted() {
         PoP.server.setHttpClient(Vue.axios);
         this.setData();
-        this.pollResource();
     },
     destroyed() {
-        clearInterval(this.resourcePollIntervalId);
-        clearInterval(this.votesPollIntervalId);
+        this.stopPolls();
     },
     watch:  {
         _id: function(oldid, newid) {
@@ -75,27 +117,108 @@ export default {
     methods: {
         pollResource: function() {
             this.resourcePollIntervalId = setInterval(() => {
-                this.setResource();
-            }, 2000);
+                this.setResource().then(() => {
+                    // If voting period ends, we stop polling for data
+                    if (!this.votingIsOngoing) {
+                        this.stopPolls();
+                    }
+                });
+            }, 5000);
         },
         pollVotes: function() {
             this.votesPollIntervalId = setInterval(() => {
                 this.setGraphVotes();
-            }, 5000);
+            }, 15000);
+        },
+        startPolls: function() {
+            this.pollResource();
+            this.pollVotes();
+        },
+        stopPolls: function() {
+            clearInterval(this.resourcePollIntervalId);
+            clearInterval(this.votesPollIntervalId);
+            this.resourcePollIntervalId = null;
+            this.votesPollIntervalId = null;
+        },
+        getTimeUnit: function() {
+            return (this.resource.endDate - this.resource.startDate) / 5;
+        },
+        votingOngoing: function() {
+            let now = new Date().getTime();
+            return this.resource.startDate <= now
+                && this.resource.endDate > now;
         },
         setData: function() {
+            // We run this when first mounting or when the resource changes
+            // Stop existing polls
+            this.stopPolls();
             this.setResource().then(() => {
+                this.startTimestamp = this.resource.startDate;
+                this.graphValues = this.resource.options.map((option) => []);
                 this.setOwnVotes();
+                this.setGraphVotes();
+
+                // Start polls if resource has ongoing voting
+                if (this.votingIsOngoing) {
+                    this.startPolls();
+                }
             });
         },
+        getGraphValues: function(votes, start, end) {
+            let values, endTime;
+            let index = 0;
+
+            endTime = start;
+            values = this.graphValues;
+
+            while (index < votes.length) {
+                const vote = votes[index];
+                if (vote.timestamp <= endTime) {
+                    values[vote.optionid][values[vote.optionid].length  - 1] += 1;
+                    index += 1;
+                } else {
+                    endTime += this.timeUnit;
+                    // Timestamps are in order, when the graph interval changes,
+                    // it changes for all options
+                    values.forEach((optionV, ndx) => {
+                        values[ndx].push(0);
+                    });
+                }
+            };
+            return values;
+        },
         setGraphVotes: function() {
-            console.log('setGraphVotes');
+            let startTimestamp = this.startTimestamp;
+            let endTimestamp = Math.min(this.resource.endDate, new Date().getTime());
+            this.startTimestamp = endTimestamp;
+
+            let response = PoP.server.getVotes(
+                this._id,
+                startTimestamp,
+            ).then((response) => {
+                this.graphValues = this.getGraphValues(response.data, startTimestamp, endTimestamp);
+            }).catch(console.log);
         },
         setResource: function() {
             return PoP.server.getResource(this._id).then(result => {
+                if (!this.resource || this.resource._id != result.data._id) {
+                    result.data.options.forEach((option, index) => {
+                        result.data.options[index].color = [
+                            this.getRandomInt(255),
+                            this.getRandomInt(255),
+                            this.getRandomInt(255),
+                        ]
+                    });
+                } else {
+                    result.data.options.forEach((option, index) => {
+                        result.data.options[index].color = this.resource.options[index].color;
+                    });
+                }
                 this.resource = result.data;
                 this.setTotalVotes(this.resource.options);
                 this.votesPerPerson = this.resource.votesPerPerson;
+                this.votingIsOngoing = this.votingOngoing();
+                this.timeUnit = this.getTimeUnit();
             });
         },
         setTotalVotes: function(options) {
@@ -111,8 +234,14 @@ export default {
             PoP.server.vote(this.resource._id, index).then(response => {
                 this.remainingVotes = response.data.count;
                 this.totalVotes += 1;
+            }).catch((error) => {
+                this.errorMessage = `${error.response.data.error.statusCode}: ${error.response.data.error.message}`;
+                this.errorAlert = true;
             });
         },
+        getRandomInt(max) {
+            return Math.floor(Math.random() * Math.floor(max));
+        }
     },
 };
 </script>
@@ -125,8 +254,20 @@ export default {
     margin-top: 30px;
 }
 .stats {
-    position: absolute;
+    position: fixed;
     right: 0;
     top: 0;
+}
+.graph {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+.errorAlert {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    width: 320px;
 }
 </style>
