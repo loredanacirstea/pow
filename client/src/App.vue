@@ -1,7 +1,8 @@
 <template>
   <v-app>
     <v-content>
-        <v-navigation-drawer
+        <PoPResource/>
+        <!-- <v-navigation-drawer
             v-model="drawer"
             :mini-variant.sync="mini"
             permanent
@@ -24,8 +25,8 @@
                     </v-list-tile-action>
                 </v-list-tile>
             </v-list>
-        </v-navigation-drawer>
-        <router-view></router-view>
+        </v-navigation-drawer> -->
+        <!-- <router-view></router-view> -->
     </v-content>
   </v-app>
 </template>
@@ -33,9 +34,11 @@
 <script>
 import Vue from 'vue';
 import PoP from './constants';
+import PoPResource from './components/PoPResource';
 
 export default {
     name: 'app',
+    components: {PoPResource},
     data() {
         return {
             drawer: true,
