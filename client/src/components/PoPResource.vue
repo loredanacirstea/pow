@@ -87,9 +87,10 @@ import Vue from 'vue';
 import PoP from '../constants';
 
 export default {
-    props: ['_id'],
+    // props: ['_id'],
     data() {
         return {
+            _id: '1',
             resource: null,
             totalVotes: 0,
             votesPerPerson: 0,
@@ -113,11 +114,11 @@ export default {
     destroyed() {
         this.stopPolls();
     },
-    watch:  {
-        _id: function(oldid, newid) {
-            this.setData();
-        },
-    },
+    // watch:  {
+    //     _id: function(oldid, newid) {
+    //         this.setData();
+    //     },
+    // },
     methods: {
         pollResource: function() {
             this.resourcePollIntervalId = setInterval(() => {
@@ -211,7 +212,7 @@ export default {
             this.startTimestamp = endTimestamp;
 
             let response = PoP.server.getVotes(
-                this._id,
+                '1',
                 startTimestamp,
             ).then((response) => {
                 this.getGraphValues(response.data, startTimestamp, endTimestamp);
@@ -220,7 +221,7 @@ export default {
             }).catch(console.log);
         },
         setResource: function() {
-            return PoP.server.getResource(this._id).then(result => {
+            return PoP.server.getResource('1').then(result => {
                 if (!this.resource || this.resource._id != result.data._id) {
                     result.data.options.forEach((option, index) => {
                         result.data.options[index].color = [
@@ -246,7 +247,7 @@ export default {
                 .reduce((accumulator, value) => accumulator + value);
         },
         setOwnVotes: function() {
-            PoP.server.getOwnVotes(this._id).then(response => {
+            PoP.server.getOwnVotes('1').then(response => {
                 this.remainingVotes = this.votesPerPerson - response.data.count;
             });
         },

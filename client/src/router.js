@@ -9,7 +9,8 @@ export default new Router({
         {
             path: '/',
             name: 'home',
-            component: Home,
+            // component: Home,
+            component: () => import(/* webpackChunkName: "about" */ './components/PoPResource.vue'),
         },
         {
             path: '/resource/:_id',
