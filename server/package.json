@@ -54,6 +54,7 @@
     "@loopback/rest-explorer": "^1.1.8",
     "@loopback/service-proxy": "^1.0.8",
     "js-sha3": "^0.8.0",
+    "loopback-connector-rest": "^3.4.1",
     "memory": "0.0.3"
   },
   "devDependencies": {

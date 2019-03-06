@@ -21,9 +21,13 @@ import {
   HttpErrors,
 } from '@loopback/rest';
 import {sha3_256} from 'js-sha3';
+import {Context} from '@loopback/context';
 import {Resource} from '../models';
 import {ResourceRepository} from '../repositories';
 import {VoteController} from './vote.controller';
+import {Raiden} from './raiden.controller';
+import {RaidenDataSource} from '../datasources';
+import {TOKEN, ADDR, TOKEN_AMOUNT_WEI} from '../constants';
 
 export class ResourceController {
   constructor(
@@ -207,6 +211,10 @@ export class ResourceController {
 
     // TODO raiden payment (don't wait for success)
 
+    this.sendRaidenPayment(TOKEN, ADDR.target, TOKEN_AMOUNT_WEI).catch((error) => {
+        console.log(error);
+    });
+
     let vote = await voteController.create({
         iphash,
         resourceid: id,
@@ -224,6 +232,17 @@ export class ResourceController {
     getClientHashIp(req: Request): string {
         const clientIp = req.header('x-forwarded-for') || req.ip;
         const iphash = sha3_256(clientIp);
+        console.log('iphash', iphash);
         return iphash;
+    }
+
+    async sendRaidenPayment(token: string, target: string, amount: number): Promise<any> {
+        const context: Context = new Context();
+        context.bind('datasources.raiden').to(RaidenDataSource);
+        context.bind('controllers.Raiden').toClass(Raiden);
+        const raiden = await context.get<Raiden>(
+        'controllers.Raiden',
+        );
+        return await raiden.raiden.pay(token, target, amount);
     }
 }

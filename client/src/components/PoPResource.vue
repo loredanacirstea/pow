@@ -51,21 +51,23 @@
             </div>
         </div>
         </br></br></br></br></br></br></br></br>
-        <div class="graph" v-for="(option, index) in resource.options">
-            <v-flex xs12 wrap>
-                <v-sparkline
-                    v-if="graphValues[index] && graphValues[index].length"
-                    :value="graphValues[index]"
-                    height="50"
-                    :color="`rgba(${option.color.join(',')}, 0.3)`"
-                    smooth="10"
-                    padding="8"
-                    line-width="1"
-                    stroke-linecap="round"
-                    gradient-direction="top"
-                    auto-draw
-                ></v-sparkline>
-            </v-flex>
+        <div class="graphs">
+            <div class="graph" v-for="(option, index) in resource.options">
+                <v-flex xs12 wrap class="graph">
+                    <v-sparkline
+                        v-if="graphValues[index] && graphValues[index].length"
+                        :value="graphValues[index]"
+                        :height="40"
+                        :color="`rgba(${option.color.join(',')}, 0.3)`"
+                        smooth="10"
+                        padding="8"
+                        line-width="1"
+                        stroke-linecap="round"
+                        gradient-direction="top"
+                        auto-draw
+                    ></v-sparkline>
+                </v-flex>
+            </div>
         </div>
         <div  class="errorAlert">
             <v-alert
@@ -97,9 +99,11 @@ export default {
             startTimestamp: null,
             votingIsOngoing: false,
             graphValues: [],
+            graphMaxValues: [],
             errorAlert: false,
             errorMessage: null,
             timeUnit: 0,
+            graphEndTimeUnit: 0,
         };
     },
     mounted() {
@@ -117,6 +121,7 @@ export default {
     methods: {
         pollResource: function() {
             this.resourcePollIntervalId = setInterval(() => {
+                console.log('pollResource');
                 this.setResource().then(() => {
                     // If voting period ends, we stop polling for data
                     if (!this.votingIsOngoing) {
@@ -127,6 +132,7 @@ export default {
         },
         pollVotes: function() {
             this.votesPollIntervalId = setInterval(() => {
+                console.log('pollVotes');
                 this.setGraphVotes();
             }, 15000);
         },
@@ -139,9 +145,10 @@ export default {
             clearInterval(this.votesPollIntervalId);
             this.resourcePollIntervalId = null;
             this.votesPollIntervalId = null;
+            this.graphEndTimeUnit = 0;
         },
         getTimeUnit: function() {
-            return (this.resource.endDate - this.resource.startDate) / 5;
+            return (this.resource.endDate - this.resource.startDate) / 80;
         },
         votingOngoing: function() {
             let now = new Date().getTime();
@@ -155,6 +162,7 @@ export default {
             this.setResource().then(() => {
                 this.startTimestamp = this.resource.startDate;
                 this.graphValues = this.resource.options.map((option) => []);
+                this.graphMaxValues = this.resource.options.map((option) => 0);
                 this.setOwnVotes();
                 this.setGraphVotes();
 
@@ -165,16 +173,21 @@ export default {
             });
         },
         getGraphValues: function(votes, start, end) {
-            let values, endTime;
+            let values, maxValues, endTime;
             let index = 0;
+            console.log('this.timeUnit', this.timeUnit, this.timeUnit / 1000 / 60);
+            console.log('getGraphValues DIFF', JSON.stringify(votes));
 
-            endTime = start;
+            endTime = this.graphEndTimeUnit || start;
             values = this.graphValues;
+            maxValues = this.graphMaxValues;
 
             while (index < votes.length) {
                 const vote = votes[index];
+                console.log('endTime', endTime, new Date(endTime), vote.timestamp <= endTime, new Date(vote.timestamp));
                 if (vote.timestamp <= endTime) {
                     values[vote.optionid][values[vote.optionid].length  - 1] += 1;
+                    maxValues[vote.optionid] = Math.max(maxValues[vote.optionid], values[vote.optionid][values[vote.optionid].length  - 1]);
                     index += 1;
                 } else {
                     endTime += this.timeUnit;
@@ -185,7 +198,12 @@ export default {
                     });
                 }
             };
-            return values;
+            this.graphEndTimeUnit = endTime;
+            this.graphMaxValues = maxValues;
+            this.graphValues = values;
+            console.log('setGraphVotes graphValues TOTAL', JSON.stringify(this.graphValues));
+            console.log('setGraphVotes graphMaxValues', JSON.stringify(this.graphMaxValues));
+            // return {values, maxValues};
         },
         setGraphVotes: function() {
             let startTimestamp = this.startTimestamp;
@@ -196,7 +214,9 @@ export default {
                 this._id,
                 startTimestamp,
             ).then((response) => {
-                this.graphValues = this.getGraphValues(response.data, startTimestamp, endTimestamp);
+                this.getGraphValues(response.data, startTimestamp, endTimestamp);
+                // this.graphValues = this.getGraphValues(response.data, startTimestamp, endTimestamp);
+                // console.log('setGraphVotes graphValues TOTAL', JSON.stringify(this.graphValues));
             }).catch(console.log);
         },
         setResource: function() {
@@ -258,11 +278,14 @@ export default {
     right: 0;
     top: 0;
 }
-.graph {
+.graphs {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
+}
+.graph {
+
 }
 .errorAlert {
     position: fixed;
